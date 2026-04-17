@@ -2,73 +2,216 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>3D Object Viewer PWA</title>
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <meta
+      name="description"
+      content="Local PWA viewer for ZIP packages, mounted folders, FBX, GLB, GLTF and OBJ assets with textures."
+    />
+    <meta name="theme-color" content="#1a1c1e" />
+    <title>3D Object Viewer</title>
   </head>
   <body>
     <div id="app">
-      <!-- Drag & Drop Overlay -->
-      <div id="drop-overlay" class="hidden">
-        <div class="drop-content">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <h2>Drop your ZIP files here</h2>
-          <p>Contains FBX, OBJ, GLB and textures</p>
+      <div id="drop-overlay" class="hidden" aria-hidden="true">
+        <div class="drop-panel">
+          <p class="eyebrow">Add Source</p>
+          <h2>Drop ZIP packages or 3D files</h2>
+          <p>Use a complete ZIP package when textures sit next to the model.</p>
         </div>
       </div>
 
-      <!-- Sidebar -->
       <aside id="sidebar">
         <div class="sidebar-header">
-          <h1>3D Viewer</h1>
-          <p>Drag ZIPs into the browser</p>
+          <div>
+            <p class="eyebrow">Browser Native</p>
+            <h1>3D Object Viewer</h1>
+          </div>
+          <p class="sidebar-copy">
+            Inspect ZIP packages, mounted folders, FBX, GLB, GLTF, and OBJ assets entirely in-browser with no upload.
+          </p>
         </div>
+
         <div class="file-actions">
-          <input type="file" id="file-input" multiple accept=".zip,.fbx,.obj,.glb" class="hidden" />
-          <button id="browse-btn" class="glass-btn">Browse Files</button>
+          <input
+            type="file"
+            id="file-input"
+            multiple
+            accept=".zip,.fbx,.obj,.glb,.gltf"
+            class="hidden"
+          />
+          <button id="browse-btn" class="primary-btn" type="button">
+            Add Files
+          </button>
+          <button id="mount-folder-btn" class="secondary-btn hidden" type="button">
+            Mount Folder
+          </button>
+          <button id="clear-btn" class="secondary-btn" type="button">
+            Clear Library
+          </button>
         </div>
-        <ul id="zip-list">
-          <li class="empty-state">No files loaded yet</li>
-        </ul>
+
+        <div
+          id="status-banner"
+          class="status-banner hidden"
+          role="status"
+          aria-live="polite"
+        ></div>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <h2>Library</h2>
+            <span id="library-count" class="pill">0 items</span>
+          </div>
+          <ul id="archive-list" class="archive-list" aria-label="Loaded assets"></ul>
+        </section>
+
       </aside>
 
-      <!-- Main Viewer Area -->
-      <main id="viewer-container">
-        <!-- 3D Canvas will be injected here -->
-        
-        <div id="hud" class="hidden">
-          <h2 id="hud-title">Model Name</h2>
-          <div class="hud-controls">
-            <button id="reset-cam-btn" class="glass-btn small" title="Reset Camera">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                <path d="M3 3v5h5"></path>
-              </svg>
-            </button>
-            <button id="export-btn" class="glass-btn small" title="Convert to GLB">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Export
-            </button>
+      <main id="viewer-shell">
+        <div class="viewer-backdrop"></div>
+
+        <button
+          id="inspector-toggle"
+          class="inspector-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="archive-meta"
+        >
+          Inspector
+        </button>
+
+        <section id="viewer-container" aria-label="3D preview">
+          <div id="empty-view" class="empty-view">
+            <p class="eyebrow">Viewport</p>
+            <h2 id="empty-title">Add a 3D asset source</h2>
+            <p id="empty-description">
+              Drop a ZIP package with a model and its textures, add a standalone 3D file, or mount a local folder when supported.
+            </p>
           </div>
-        </div>
-        
-        <div id="loading" class="hidden">
-          <div class="spinner"></div>
-          <p id="loading-text">Loading...</p>
-        </div>
+
+          <div id="hud" class="hidden">
+            <div class="hud-copy">
+              <p class="eyebrow" id="hud-format">No asset loaded</p>
+              <h2 id="hud-title">-</h2>
+              <p id="hud-subtitle">-</p>
+            </div>
+
+            <div class="hud-controls">
+              <div class="view-mode-group" role="group" aria-label="Viewport shading mode">
+                <button
+                  id="view-lit-btn"
+                  class="toolbar-btn"
+                  type="button"
+                  aria-pressed="true"
+                >
+                  Lit
+                </button>
+                <button
+                  id="view-unlit-btn"
+                  class="toolbar-btn"
+                  type="button"
+                  aria-pressed="false"
+                >
+                  Unlit
+                </button>
+                <button
+                  id="view-wireframe-btn"
+                  class="toolbar-btn"
+                  type="button"
+                  aria-pressed="false"
+                >
+                  Wireframe
+                </button>
+              </div>
+              <button
+                id="reset-cam-btn"
+                class="toolbar-btn"
+                type="button"
+                aria-label="Frame the camera on the model"
+              >
+                Frame
+              </button>
+              <button
+                id="toggle-grid-btn"
+                class="toolbar-btn"
+                type="button"
+                aria-pressed="true"
+              >
+                Grid
+              </button>
+              <button
+                id="toggle-anim-btn"
+                class="toolbar-btn hidden"
+                type="button"
+                aria-pressed="true"
+              >
+                Animation
+              </button>
+              <button id="export-btn" class="toolbar-btn" type="button">
+                Export GLB
+              </button>
+            </div>
+          </div>
+
+          <div id="loading" class="hidden" aria-live="polite">
+            <div class="spinner"></div>
+            <p id="loading-text">Loading...</p>
+          </div>
+        </section>
+
+        <aside id="archive-meta" class="inspector hidden collapsed" aria-label="Asset inspector">
+          <div class="inspector-header">
+            <div>
+              <p class="eyebrow">Source Details</p>
+              <h2 id="archive-meta-title">Details</h2>
+            </div>
+            <div class="inspector-actions">
+              <span id="archive-meta-badge" class="pill">-</span>
+              <button
+                id="inspector-close-btn"
+                class="icon-btn"
+                type="button"
+                aria-label="Collapse the inspector panel"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+
+          <p id="archive-summary" class="archive-summary"></p>
+
+          <div class="meta-grid">
+            <div>
+              <span>Files</span>
+              <strong id="meta-files">-</strong>
+            </div>
+            <div>
+              <span>Textures</span>
+              <strong id="meta-textures">-</strong>
+            </div>
+            <div>
+              <span>Materials</span>
+              <strong id="meta-materials">-</strong>
+            </div>
+            <div>
+              <span>Size</span>
+              <strong id="meta-size">-</strong>
+            </div>
+          </div>
+
+          <div class="model-selector">
+            <div class="panel-heading compact">
+              <h3>Detected Models</h3>
+              <span id="model-count" class="pill">0</span>
+            </div>
+            <ul id="model-list" class="model-list" aria-label="Detected models"></ul>
+          </div>
+        </aside>
       </main>
     </div>
-    
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
