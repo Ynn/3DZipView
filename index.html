@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Object Viewer PWA</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <!-- Drag & Drop Overlay -->
+      <div id="drop-overlay" class="hidden">
+        <div class="drop-content">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <h2>Drop your ZIP files here</h2>
+          <p>Contains FBX, OBJ, GLB and textures</p>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside id="sidebar">
+        <div class="sidebar-header">
+          <h1>3D Viewer</h1>
+          <p>Drag ZIPs into the browser</p>
+        </div>
+        <div class="file-actions">
+          <input type="file" id="file-input" multiple accept=".zip,.fbx,.obj,.glb" class="hidden" />
+          <button id="browse-btn" class="glass-btn">Browse Files</button>
+        </div>
+        <ul id="zip-list">
+          <li class="empty-state">No files loaded yet</li>
+        </ul>
+      </aside>
+
+      <!-- Main Viewer Area -->
+      <main id="viewer-container">
+        <!-- 3D Canvas will be injected here -->
+        
+        <div id="hud" class="hidden">
+          <h2 id="hud-title">Model Name</h2>
+          <div class="hud-controls">
+            <button id="reset-cam-btn" class="glass-btn small" title="Reset Camera">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+            </button>
+            <button id="export-btn" class="glass-btn small" title="Convert to GLB">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Export
+            </button>
+          </div>
+        </div>
+        
+        <div id="loading" class="hidden">
+          <div class="spinner"></div>
+          <p id="loading-text">Loading...</p>
+        </div>
+      </main>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
